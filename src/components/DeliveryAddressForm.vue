@@ -6,25 +6,30 @@
       </div>
 
       <div class="v-popup__content">
-        <input
-          type="text"
-          v-model="location"
-          list="addressesFromGoogle"
-        />
-        <datalist id="addressesFromGoogle">
+        <input type="text" v-model="location" list="addressesFromGoogle" />
+
+        <datalist v-if="location == ''" id="addressesFromGoogle">
           <option
-            v-for="(result, i) in searchResults"
+            v-for="(address, i) in savedAddresses"
             :key="i"
-            :value="result"
+            :value="address"
           >
+            {{ address }}
+          </option>
+        </datalist>
+
+        <datalist v-else id="addressesFromGoogle">
+          <option v-for="(result, i) in searchResults" :key="i" :value="result">
             {{ result }}
           </option>
         </datalist>
       </div>
-
+      
       <div class="v-popup__footer">
-        <button class="v-popup-save-data"  @click="selectAddress">Сохрать</button>
-        <button class="v-popup-close-form" @click="closePopup">Закрыть</button>
+        <button class="v-popup-save-data" @click="selectAddress">
+          Сохрать
+        </button>
+        <button class="v-popup-close-form" @click="closeForm">Закрыть</button>
       </div>
     </div>
   </div>
@@ -33,7 +38,14 @@
 <script>
 export default {
   name: "v-popup",
-  props: {},
+  props: {
+    savedAddresses: {
+      type: Array,
+      default() {
+        return {};
+      },
+    },
+  },
   data: () => ({
     location: "",
     searchResults: [],
@@ -43,7 +55,7 @@ export default {
     return {
       script: [
         {
-          src: `https://maps.googleapis.com/maps/api/js?key=AIzaSyBESP18vyTtsgIjKyMKEMDum9_qyEBIBLo&libraries=places`,
+          src: `https://maps.googleapis.com/maps/api/js?key=[API_KEY]&libraries=places`,
           async: true,
           defer: true,
           callback: () => this.MapsInit(), // will declare it in methods
@@ -52,20 +64,29 @@ export default {
     };
   },
   methods: {
-    closePopup() {
-      this.$emit("closePopup");
+    closeForm() {
+      this.$emit("closeForm");
     },
+
     selectAddress() {
-      if(this.location == '') {
+      if (this.location == "") {
         return;
       }
+
+      const deliveryAddress = {
+        value: this.location,
+      };
+
       this.$emit("selectAddress", this.location);
-      this.$emit("closePopup");
+      this.$emit("editDeliveryAddress", deliveryAddress);
+      this.$emit("closeForm");
     },
+
     MapsInit() {
       // @ts-ignore
       this.service = new window.google.maps.places.AutocompleteService();
     },
+
     displaySuggestions(predictions, status) {
       // @ts-ignore
       if (status !== window.google.maps.places.PlacesServiceStatus.OK) {
@@ -110,7 +131,7 @@ export default {
 .v-popup {
   padding: 16px;
   position: fixed;
-  top: 50px;
+  top: 30%;
   width: 400px;
   background: #ffffff;
   box-shadow: 0 0 17px 0 #e7e7e7;

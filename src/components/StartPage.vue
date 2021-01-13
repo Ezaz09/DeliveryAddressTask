@@ -2,43 +2,36 @@
   <div class="StartPage">
     <div class="row">
       <div class="input-field col s12 delivery-address">
-        <label for="delivery_address">Введите адрес доставки</label>
+        <span>Введите адрес доставки</span>
+
         <input
           id="delivery_address"
           type="text"
           class="validate"
           v-model="address"
-          list="savedAddresses"
         />
-        <datalist id="savedAddresses">
-          <option
-            v-for="(address, i) in savedAddresses"
-            :key="i"
-            :value="address"
-          >
-            {{ address }}
-          </option>
-        </datalist>
       </div>
     </div>
 
-    <button id="show-modal" class="add-address" @click="showPopup">
+    <button id="show-modal" class="add-address" @click="showForm">
       Добавить адрес
     </button>
 
-    <popup
+    <DeliveryAddressForm
       v-if="showModal"
-      @closePopup="closePopup"
+      :savedAddresses="savedAddresses"
+      @closeForm="closeForm"
       @selectAddress="selectAddress"
+      @editDeliveryAddress="editDeliveryAddress"
     />
   </div>
 </template>
 
 <script>
-import popup from "../components/popup-with-google.vue";
+import DeliveryAddressForm from "../components/DeliveryAddressForm.vue";
 
 export default {
-  components: { popup },
+  components: { DeliveryAddressForm },
   name: "StartPage",
   proprs: {},
   data() {
@@ -52,16 +45,20 @@ export default {
   created() {},
   mounted() {},
   methods: {
-    showPopup() {
+    showForm() {
       this.showModal = true;
     },
-    closePopup() {
+    closeForm() {
       this.showModal = false;
     },
     selectAddress(address) {
       this.savedAddresses.push(address);
       this.address = address;
     },
+    editDeliveryAddress(deliveryAddress) {
+      this.$store.state.deliveryAddressInfo = deliveryAddress;
+      this.$store.dispatch("sendDeliveryAddress", 1);
+    }
   },
 };
 </script>
